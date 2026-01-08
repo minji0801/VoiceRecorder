@@ -5,7 +5,7 @@
 //  Created by Arlin Kim on 1/8/26.
 //
 
-import Foundation
+import UIKit
 import AVFoundation
 import Combine
 
@@ -37,7 +37,7 @@ final class AudioRecorderService: NSObject {
     let session = AVAudioSession.sharedInstance()
     
     do {
-      try session.setCategory(.playAndRecord, mode: .default)
+      try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
       try session.setActive(true)
       
       // TODO: 음성 품질 컨트롤하기
@@ -115,7 +115,9 @@ final class AudioRecorderService: NSObject {
     let averagePower = recorder.averagePower(forChannel: 0)
     
     let normalizedLevel = max(0, min(1, (averagePower + 50) / 50))
-    audioLevel = normalizedLevel
+    if UIApplication.shared.applicationState == .active {
+      audioLevel = normalizedLevel
+    }
     
     if let startTime = recordingStartTime {
       elapsedTime = Date().timeIntervalSince(startTime) - pausedDuration

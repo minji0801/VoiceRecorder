@@ -62,7 +62,7 @@ final class RecordingViewModel {
   }
   
   func stopRecording() {
-    _ = recorderService.stopRecording()
+    recorderService.stopRecording()
     state = .idle
   }
   
