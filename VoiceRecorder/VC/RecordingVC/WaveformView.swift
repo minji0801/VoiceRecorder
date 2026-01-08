@@ -72,9 +72,7 @@ final class WaveformView: UIView {
   override func draw(_ rect: CGRect) {
     guard let context = UIGraphicsGetCurrentContext() else { return }
     
-    // Draw background
-    let bgColor = UIColor(red: 0.08, green: 0.09, blue: 0.15, alpha: 1.0)
-    context.setFillColor(bgColor.cgColor)
+    context.setFillColor(UIColor.customNavy.cgColor)
     context.fill(rect)
     
     guard !levels.isEmpty else {
@@ -97,9 +95,6 @@ final class WaveformView: UIView {
     let centerY = rect.height / 2
     let maxHeight = rect.height * 0.7
     
-    let startColor = UIColor(red: 0.55, green: 0.45, blue: 0.85, alpha: 1.0)
-    let endColor = UIColor(red: 0.65, green: 0.6, blue: 0.95, alpha: 1.0)
-    
     context.setLineCap(.round)
     context.setLineWidth(barWidth)
     
@@ -108,7 +103,7 @@ final class WaveformView: UIView {
     for (index, level) in visibleLevels.enumerated() {
       let x = startX + CGFloat(index) * totalBarWidth + barWidth / 2
       let progress = CGFloat(index) / CGFloat(max(1, visibleLevels.count - 1))
-      let color = interpolateColor(from: startColor, to: endColor, progress: progress)
+      let color = interpolateColor(from: UIColor.customPurpleDark, to: UIColor.customPurple, progress: progress)
       
       let scaledLevel = pow(CGFloat(level), 0.6)
       let barHeight = max(4, scaledLevel * maxHeight)
@@ -132,11 +127,9 @@ final class WaveformView: UIView {
     let barCount = Int(availableWidth / totalBarWidth)
     let centerY = rect.height / 2
     
-    let placeholderColor = UIColor(red: 0.2, green: 0.2, blue: 0.3, alpha: 0.5)
-    
     context.setLineCap(.round)
     context.setLineWidth(barWidth)
-    context.setStrokeColor(placeholderColor.cgColor)
+    context.setStrokeColor(UIColor.customGray.cgColor)
     
     for i in 0..<barCount {
       let x = startX + CGFloat(i) * totalBarWidth + barWidth / 2

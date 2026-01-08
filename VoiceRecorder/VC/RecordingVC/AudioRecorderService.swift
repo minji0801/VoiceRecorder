@@ -9,11 +9,15 @@ import Foundation
 import AVFoundation
 import Combine
 
-final class AudioRecordManager: NSObject {
+final class AudioRecorderService: NSObject {
+  
+  static let shared = AudioRecorderService()
   
   private var audioRecorder: AVAudioRecorder?
   private var meteringTimer: Timer?
-  private(set) var recordingStartTime: Date?
+  private var recordingStartTime: Date?
+  private var pausedDuration: TimeInterval = 0
+  private var pauseStartTime: Date?
   
   @Published private(set) var isRecording: Bool = false
   @Published private(set) var audioLevel: Float = 0
@@ -27,7 +31,9 @@ final class AudioRecordManager: NSObject {
   }
   
   // 녹음 시작
-  func startRecording() {
+  func startRecording() throws {
+    guard !isRecording else { return }
+    
     let session = AVAudioSession.sharedInstance()
     
     do {
@@ -52,6 +58,7 @@ final class AudioRecordManager: NSObject {
       if audioRecorder?.record() == true {
         isRecording = true
         recordingStartTime = Date()
+        pausedDuration = 0
         startMeteringTimer()
       }
     } catch {
@@ -68,6 +75,24 @@ final class AudioRecordManager: NSObject {
     isRecording = false
     elapsedTime = 0
     audioLevel = 0
+  }
+  
+  // 녹음 일시정지
+  func pauseRecording() {
+    guard audioRecorder?.isRecording == true else { return }
+    audioRecorder?.pause()
+    pauseStartTime = Date()
+    stopMeteringTimer()
+  }
+  
+  // 녹음 재개
+  func resumeRecording() {
+    if let pauseStart = pauseStartTime {
+      pausedDuration += Date().timeIntervalSince(pauseStart)
+      pauseStartTime = nil
+    }
+    audioRecorder?.record()
+    startMeteringTimer()
   }
   
   // MARK: - Private Method
@@ -93,7 +118,7 @@ final class AudioRecordManager: NSObject {
     audioLevel = normalizedLevel
     
     if let startTime = recordingStartTime {
-      elapsedTime = Date().timeIntervalSince(startTime)
+      elapsedTime = Date().timeIntervalSince(startTime) - pausedDuration
     }
   }
   
@@ -108,7 +133,7 @@ final class AudioRecordManager: NSObject {
 }
 // MARK: - AVAudioRecorderDelegate
 
-extension AudioRecordManager: AVAudioRecorderDelegate {
+extension AudioRecorderService: AVAudioRecorderDelegate {
   
   func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
     isRecording = false

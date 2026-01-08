@@ -18,12 +18,12 @@ final class MainTabBarVC: UITabBarController {
   private func setupTabBar() {
     let appearance = UITabBarAppearance()
     appearance.configureWithOpaqueBackground()
-    appearance.backgroundColor = .systemBackground
+    appearance.backgroundColor = .customBlack
     
-    appearance.stackedLayoutAppearance.normal.iconColor = .darkGray
-    appearance.stackedLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor.darkGray]
-    appearance.stackedLayoutAppearance.selected.iconColor = .systemBlue
-    appearance.stackedLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor.systemBlue]
+    appearance.stackedLayoutAppearance.normal.iconColor = .customGray
+    appearance.stackedLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor.customGray]
+    appearance.stackedLayoutAppearance.selected.iconColor = .customPurple
+    appearance.stackedLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor.customPurple]
     
     tabBar.standardAppearance = appearance
     tabBar.scrollEdgeAppearance = appearance

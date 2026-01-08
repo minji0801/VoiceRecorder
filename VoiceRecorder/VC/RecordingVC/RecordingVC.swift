@@ -28,7 +28,8 @@ final class RecordingVC: UIViewController {
   // 레코딩 버튼
   private lazy var recordButton: UIButton = {
     let button = UIButton(type: .system)
-    button.backgroundColor = .systemRed
+    button.backgroundColor = .customRed
+    button.tintColor = .white
     button.layer.cornerRadius = 40
     button.layer.borderWidth = 4
     button.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
@@ -36,8 +37,22 @@ final class RecordingVC: UIViewController {
     return button
   }()
   
-  private let audioRecordManager = AudioRecordManager()
+  // 일시정지 버튼
+  private lazy var pauseButton: UIButton = {
+    let button = UIButton()
+    button.setImage(UIImage(systemName: "pause.fill", withConfiguration: iconConfig), for: .normal)
+    button.tintColor = .white
+    button.backgroundColor = .customPurple
+    button.layer.cornerRadius = 28
+    button.isHidden = true
+    button.addTarget(self, action: #selector(pauseButtonTapped), for: .touchUpInside)
+    return button
+  }()
+  
+  private let viewModel = RecordingViewModel()
   private var cancellables = Set<AnyCancellable>()
+  
+  private let iconConfig = UIImage.SymbolConfiguration(pointSize: 24, weight: .medium)
   
   // MARK: - Lifesycle
   
@@ -52,11 +67,12 @@ final class RecordingVC: UIViewController {
   // MARK: - Setup
   
   private func setupUI() {
-    view.backgroundColor = .systemBackground
+    view.backgroundColor = .customBlack
     
     view.addSubview(timerLabel)
     view.addSubview(waveformView)
     view.addSubview(recordButton)
+    view.addSubview(pauseButton)
   }
   
   private func setupConstraints() {
@@ -74,46 +90,65 @@ final class RecordingVC: UIViewController {
       make.centerX.equalToSuperview()
       make.size.equalTo(80)
     }
+    pauseButton.snp.makeConstraints { make in
+      make.leading.equalTo(recordButton.snp.trailing).offset(40)
+      make.centerY.equalTo(recordButton)
+      make.size.equalTo(56)
+    }
   }
   
   private func setupBindings() {
-    audioRecordManager.$elapsedTime
+    viewModel.$elapsedTime
       .receive(on: DispatchQueue.main)
-      .sink { [weak self] elapsedTime in
-        let minutes = Int(elapsedTime) / 60
-        let seconds = Int(elapsedTime) % 60
-        self?.timerLabel.text = String(format: "%02d:%02d", minutes, seconds)
+      .sink { [weak self] _ in
+        self?.timerLabel.text = self?.viewModel.formattedTime
       }
       .store(in: &cancellables)
     
-    audioRecordManager.$audioLevel
+    viewModel.$audioLevel
       .receive(on: DispatchQueue.main)
       .sink { [weak self] level in
-        guard let self = self, audioRecordManager.isRecording else { return }
+        guard let self = self, self.viewModel.state == .recording else { return }
         self.waveformView.addLevel(level)
       }
       .store(in: &cancellables)
     
-    audioRecordManager.$isRecording
+    viewModel.$state
       .receive(on: DispatchQueue.main)
-      .sink { [weak self] isRecording in
-        if isRecording {
-          self?.recordButton.backgroundColor = .systemGray
-          self?.waveformView.reset()
-        } else {
-          self?.recordButton.backgroundColor = .systemRed
-          self?.timerLabel.text = "00:00"
-        }
+      .sink { [weak self] state in
+        self?.updateUI(state)
       }
       .store(in: &cancellables)
   }
   
   private func requestMicPermission() {
-    audioRecordManager.requestPermission { grated in
+    viewModel.requestPermission { grated in
       if !grated {
         print("마이크 권한 거부됨")
         // TODO: 권한 거부 시 UI/UX
       }
+    }
+  }
+  
+  private func updateUI(_ state: RecordingState) {
+    switch state {
+      case .idle:
+        recordButton.backgroundColor = .customRed
+        recordButton.setImage(nil, for: .normal)
+        pauseButton.isHidden = true
+        timerLabel.text = "00:00"
+        waveformView.reset()
+        
+      case .recording:
+        recordButton.backgroundColor = .customGray
+        recordButton.setImage(UIImage(systemName: "square.fill"), for: .normal)
+        pauseButton.setImage(UIImage(systemName: "pause.fill", withConfiguration: iconConfig), for: .normal)
+        pauseButton.backgroundColor = .customPurple
+        pauseButton.isHidden = false
+        
+      case .paused:
+        pauseButton.setImage(UIImage(systemName: "play.fill", withConfiguration: iconConfig), for: .normal)
+        pauseButton.backgroundColor = .customCyan
     }
   }
   
@@ -123,11 +158,24 @@ final class RecordingVC: UIViewController {
     recordButton.animateBounce { [weak self] in
       guard let self = self else { return }
       
-      if audioRecordManager.isRecording {
-        self.audioRecordManager.stopRecording()
-      } else {
-        self.audioRecordManager.startRecording()
+      switch self.viewModel.state {
+        case .idle:
+          do {
+            try self.viewModel.startRecording()
+            self.waveformView.reset()
+          } catch {
+//            showAlert(title: "녹음 오류", message: error.localizedDescription)
+          }
+        case .recording, .paused:
+          self.viewModel.stopRecording()
       }
+    }
+  }
+  
+  @objc private func pauseButtonTapped() {
+    pauseButton.animateBounce { [weak self] in
+      guard let self = self else { return }
+      self.viewModel.togglePause()
     }
   }
 }
