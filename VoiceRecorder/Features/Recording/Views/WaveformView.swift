@@ -62,9 +62,11 @@ final class WaveformView: BaseWaveformView {
     let centerY = rect.height / 2
     let maxHeight = rect.height * maxHeightRatio
     let visibleLevels = getVisibleLevels(for: rect)
+    let rightEdge = rect.width - startX
 
     for (index, level) in visibleLevels.enumerated() {
-      let x = startX + CGFloat(index) * totalBarWidth + barWidth / 2
+      let reversedIndex = visibleLevels.count - 1 - index
+      let x = rightEdge - CGFloat(reversedIndex) * totalBarWidth - barWidth / 2
       let progress = CGFloat(index) / CGFloat(max(1, visibleLevels.count - 1))
       let color = interpolateColor(from: gradientStartColor, to: gradientEndColor, progress: progress)
       let height = calculateBarHeight(for: level, maxHeight: maxHeight)

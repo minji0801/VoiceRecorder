@@ -172,7 +172,7 @@ final class TimelineGraphView: UIView {
     }
     
     startHour = max(0, earliestMinutes / 60)
-    endHour = min(24, max((latestMinutes + 59) / 60, startHour + 2))
+    endHour = min(24, max((latestMinutes + 59) / 60 + 1, startHour + 2))
   }
   
   private func updateContentSize() {
