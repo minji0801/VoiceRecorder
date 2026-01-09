@@ -72,7 +72,7 @@ final class TimelineRowView: UIView {
     if barWidth > timeSize.width + 16 {
       timeString.draw(at: CGPoint(x: barStartX + 8, y: barY + (barHeight - timeSize.height) / 2), withAttributes: attrs)
       
-      let durationString = recording.formattedDuration
+      let durationString = recording.duration.formatTime
       let durationSize = durationString.size(withAttributes: attrs)
       if barWidth > timeSize.width + durationSize.width + 32 {
         durationString.draw(at: CGPoint(x: barStartX + barWidth - durationSize.width - 8, y: barY + (barHeight - durationSize.height) / 2), withAttributes: attrs)

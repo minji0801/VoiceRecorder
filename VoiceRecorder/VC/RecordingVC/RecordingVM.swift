@@ -25,12 +25,6 @@ final class RecordingViewModel {
   private let recorderService: AudioRecorderService
   private var cancellables = Set<AnyCancellable>()
   
-  var formattedTime: String {
-    let minutes = Int(elapsedTime) / 60
-    let seconds = Int(elapsedTime) % 60
-    return String(format: "%02d:%02d", minutes, seconds)
-  }
-  
   // MARK: - Initialization
   
   init(recorderService: AudioRecorderService = .shared) {

@@ -14,13 +14,6 @@ struct Recording: Identifiable, Equatable {
   let duration: TimeInterval  // 녹음 길이
   var name: String            // 녹음 이름
   
-  /// 시간 포맷: mm:ss 형식
-  var formattedDuration: String {
-    let minutes = Int(duration) / 60
-    let seconds = Int(duration) % 60
-    return String(format: "%02d:%02d", minutes, seconds)
-  }
-  
   /// 날짜 포맷: yyyy.MM.dd HH:mm 형식
   var formattedDate: String {
     let formatter = DateFormatter()

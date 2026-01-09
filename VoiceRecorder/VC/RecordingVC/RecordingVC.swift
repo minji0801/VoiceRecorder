@@ -101,7 +101,7 @@ final class RecordingVC: UIViewController {
     viewModel.$elapsedTime
       .receive(on: DispatchQueue.main)
       .sink { [weak self] _ in
-        self?.timerLabel.text = self?.viewModel.formattedTime
+        self?.timerLabel.text = self?.viewModel.elapsedTime.formatTime
       }
       .store(in: &cancellables)
     

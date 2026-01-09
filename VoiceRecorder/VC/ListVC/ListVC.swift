@@ -40,6 +40,8 @@ final class ListVC: UIViewController {
   }
   
   private func setupUI() {
+    view.backgroundColor = .customBlack
+    
     view.addSubview(timelineGraphView)
     view.addSubview(emptyStateLabel)
     timelineGraphView.delegate = self

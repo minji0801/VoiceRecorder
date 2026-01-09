@@ -7,38 +7,39 @@
 
 import UIKit
 import SnapKit
+import Combine
 
 final class PlayerVC: UIViewController {
-
+  
   // MARK: - Recording File Info
   
   // 녹음 파일 정보
   private let infoStackView: UIStackView = {
-      let stackView = UIStackView()
-      stackView.axis = .vertical
-      stackView.spacing = 8
-      stackView.alignment = .center
-      return stackView
+    let stackView = UIStackView()
+    stackView.axis = .vertical
+    stackView.spacing = 8
+    stackView.alignment = .center
+    return stackView
   }()
-
+  
   // 파일이름
   private let recordingNameLabel: UILabel = {
-      let label = UILabel()
-      label.font = .systemFont(ofSize: 20, weight: .semibold)
-      label.textColor = .white
-      return label
+    let label = UILabel()
+    label.font = .systemFont(ofSize: 20, weight: .semibold)
+    label.textColor = .white
+    return label
   }()
-
+  
   // 생성날짜, 파일 크기
   private let recordingDetailsLabel: UILabel = {
-      let label = UILabel()
-      label.font = .systemFont(ofSize: 14, weight: .regular)
-      label.textColor = .customGray
-      return label
+    let label = UILabel()
+    label.font = .systemFont(ofSize: 14, weight: .regular)
+    label.textColor = .customGray
+    return label
   }()
   
   // MARK: - Play Progress
-
+  
   // 오디오 레벨 뷰
   private let waveformView = StaticWaveformView()
   
@@ -69,12 +70,15 @@ final class PlayerVC: UIViewController {
   }()
   
   // 프로그레스바
-  private let progressSlider: UISlider = {
+  private lazy var progressSlider: UISlider = {
     let slider = UISlider()
     slider.minimumValue = 0
     slider.maximumValue = 1
     slider.minimumTrackTintColor = .customPurple
     slider.maximumTrackTintColor = UIColor.white.withAlphaComponent(0.2)
+    slider.addTarget(self, action: #selector(sliderValueChanged), for: .valueChanged)
+    slider.addTarget(self, action: #selector(sliderTouchBegan), for: .touchDown)
+    slider.addTarget(self, action: #selector(sliderTouchEnded), for: [.touchUpInside, .touchUpOutside])
     return slider
   }()
   
@@ -82,49 +86,53 @@ final class PlayerVC: UIViewController {
   
   // 버튼 컨트롤
   private let controlsStackView: UIStackView = {
-      let stackView = UIStackView()
-      stackView.axis = .horizontal
-      stackView.spacing = 40
-      stackView.alignment = .center
-      return stackView
+    let stackView = UIStackView()
+    stackView.axis = .horizontal
+    stackView.spacing = 40
+    stackView.alignment = .center
+    return stackView
   }()
   
   // 재생
-  private let playButton: UIButton = {
+  private lazy var playButton: UIButton = {
     let button = UIButton()
     let config = UIImage.SymbolConfiguration(pointSize: 24, weight: .medium)
     button.setImage(UIImage(systemName: "play.fill", withConfiguration: config), for: .normal)
     button.tintColor = .white
     button.backgroundColor = .customPurple
     button.layer.cornerRadius = 28
+    button.addTarget(self, action: #selector(playButtonTapped), for: .touchUpInside)
     return button
   }()
-
+  
   // 뒤로가기
-  private let backwardButton: UIButton = {
+  private lazy var backwardButton: UIButton = {
     let button = UIButton()
     let config = UIImage.SymbolConfiguration(pointSize: 30, weight: .regular)
     button.setImage(UIImage(systemName: "gobackward.10", withConfiguration: config), for: .normal)
     button.tintColor = .customGray
+    button.addTarget(self, action: #selector(backwardButtonTapped), for: .touchUpInside)
     return button
   }()
   
   // 앞으로가기
-  private let forwardButton: UIButton = {
+  private lazy var forwardButton: UIButton = {
     let button = UIButton()
     let config = UIImage.SymbolConfiguration(pointSize: 30, weight: .regular)
     button.setImage(UIImage(systemName: "goforward.10", withConfiguration: config), for: .normal)
     button.tintColor = .customGray
+    button.addTarget(self, action: #selector(forwardButtonTapped), for: .touchUpInside)
     return button
   }()
-
   
-  private let recording: Recording
+  private let viewModel: PlayerVM
+  private var cancellables = Set<AnyCancellable>()
+  private var isSeeking = false
   
   // MARK: - Initialization
-
+  
   init(recording: Recording) {
-    self.recording = recording
+    self.viewModel = PlayerVM(recording: recording)
     super.init(nibName: nil, bundle: nil)
   }
   
@@ -136,8 +144,16 @@ final class PlayerVC: UIViewController {
     super.viewDidLoad()
     setupUI()
     setupConstraints()
-    updateUI()
+    setupBindings()
+    loadAudio()
   }
+  
+  override func viewDidDisappear(_ animated: Bool) {
+    super.viewDidDisappear(animated)
+    viewModel.stop()
+  }
+  
+  // MARK: - Setup
   
   private func setupUI() {
     view.backgroundColor = .customBlack
@@ -157,6 +173,9 @@ final class PlayerVC: UIViewController {
     view.addSubview(waveformView)
     view.addSubview(progressStackView)
     view.addSubview(controlsStackView)
+    
+    recordingNameLabel.text = viewModel.recordingName
+    recordingDetailsLabel.text = viewModel.recordingDetails
   }
   
   private func setupConstraints() {
@@ -188,11 +207,75 @@ final class PlayerVC: UIViewController {
     }
   }
   
-  private func updateUI() {
-    recordingNameLabel.text = recording.name
-    recordingDetailsLabel.text = "\(recording.formattedDate) · \(recording.fileSize)"
-    waveformView.loadSamples(from: recording.url) { samples in
+  private func setupBindings() {
+    viewModel.$isPlaying
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] isPlaying in
+        self?.updatePlayButtonImage(isPlaying: isPlaying)
+      }
+      .store(in: &cancellables)
+    
+    viewModel.$currentTime
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] _ in
+        guard let self = self, !self.isSeeking else { return }
+        self.currentTimeLabel.text = self.viewModel.formattedCurrentTime
+        self.durationLabel.text = self.viewModel.formattedDuration
+        self.progressSlider.value = self.viewModel.progress
+        self.waveformView.progress = CGFloat(self.viewModel.progress)
+      }
+      .store(in: &cancellables)
+  }
+  
+  private func loadAudio() {
+    do {
+      try viewModel.loadAudio()
+      durationLabel.text = viewModel.formattedDuration
       
+      waveformView.loadSamples(from: viewModel.recording.url) { [weak self] samples in
+        self?.viewModel.setWaveformSamples(samples)
+      }
+    } catch {
+      // TODO: 오류 처리
     }
+  }
+  
+  // MARK: - Update UI
+  
+  // 재생/일시정지 UI 변환
+  private func updatePlayButtonImage(isPlaying: Bool) {
+    let config = UIImage.SymbolConfiguration(pointSize: 24, weight: .regular)
+    let imageName = isPlaying ? "pause.fill" : "play.fill"
+    let image = UIImage(systemName: imageName, withConfiguration: config)
+    playButton.setImage(image, for: .normal)
+  }
+  
+  // MARK: - Actions
+  
+  @objc private func playButtonTapped() {
+    viewModel.togglePlayPause()
+  }
+  
+  @objc private func backwardButtonTapped() {
+    viewModel.skip(seconds: -10)
+  }
+  
+  @objc private func forwardButtonTapped() {
+    viewModel.skip(seconds: 10)
+  }
+  
+  @objc private func sliderTouchBegan() {
+    isSeeking = true
+  }
+  
+  @objc private func sliderValueChanged() {
+    let time = Double(progressSlider.value) * viewModel.duration
+    currentTimeLabel.text = time.formatTime
+    waveformView.progress = CGFloat(progressSlider.value)
+  }
+  
+  @objc private func sliderTouchEnded() {
+    viewModel.seek(to: progressSlider.value)
+    isSeeking = false
   }
 }

@@ -114,7 +114,7 @@ final class AudioRecorderService: NSObject {
     recorder.updateMeters()
     let averagePower = recorder.averagePower(forChannel: 0)
     
-    let normalizedLevel = max(0, min(1, (averagePower + 50) / 50))
+    let normalizedLevel = max(0, min(1, (averagePower + 60) / 60))
     if UIApplication.shared.applicationState == .active {
       audioLevel = normalizedLevel
     }
