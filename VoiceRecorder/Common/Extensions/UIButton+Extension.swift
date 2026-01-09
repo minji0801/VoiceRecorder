@@ -3,7 +3,7 @@
 //  VoiceRecorder
 //
 //  Created by Arlin Kim on 1/8/26.
-//
+//  버튼 바운스 애니메이션
 
 import UIKit
 

@@ -1,14 +1,14 @@
 //
-//  ListVM.swift
+//  RecordingListViewModel.swift
 //  VoiceRecorder
 //
 //  Created by Arlin Kim on 1/8/26.
-//
+//  목록 데이터 관리
 
 import Foundation
 import Combine
 
-final class ListVM {
+final class RecordingListViewModel {
   
   // MARK: - Published Properties
   
@@ -17,30 +17,30 @@ final class ListVM {
   
   // MARK: - Properties
   
-  private let storageManager: RecordingStorageManager
+  private let storageService: RecordingStorageService
   
   // MARK: - Initialization
   
-  init(storageService: RecordingStorageManager = .shared) {
-    self.storageManager = storageService
+  init(storageService: RecordingStorageService = .shared) {
+    self.storageService = storageService
   }
   
   // MARK: - Public Methods
   
   func loadRecordings() {
-    recordings = storageManager.fetchAllRecordings()
+    recordings = storageService.fetchAllRecordings()
     isEmpty = recordings.isEmpty
   }
   
   func deleteRecording(at index: Int) throws {
     guard index >= 0 && index < recordings.count else { return }
     let recording = recordings[index]
-    try storageManager.deleteRecording(recording)
+    try storageService.deleteRecording(recording)
     loadRecordings()
   }
   
   func deleteRecording(_ recording: Recording) throws {
-    try storageManager.deleteRecording(recording)
+    try storageService.deleteRecording(recording)
     loadRecordings()
   }
   

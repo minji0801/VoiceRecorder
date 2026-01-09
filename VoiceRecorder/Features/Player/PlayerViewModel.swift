@@ -1,14 +1,14 @@
 //
-//  PlayerVM.swift
+//  PlayerViewModel.swift
 //  VoiceRecorder
 //
 //  Created by Arlin Kim on 1/9/26.
-//
+//  재생 상태/로직 관리
 
 import Foundation
 import Combine
 
-final class PlayerVM {
+final class PlayerViewModel {
   
   // MARK: - Properties
   

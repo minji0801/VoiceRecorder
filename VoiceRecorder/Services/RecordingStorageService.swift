@@ -1,16 +1,16 @@
 //
-//  RecordingStorageManager.swift
+//  RecordingStorageService.swift
 //  VoiceRecorder
 //
 //  Created by Arlin Kim on 1/8/26.
-//
+//  파일 저장/조회/삭제
 
 import Foundation
 import AVFoundation
 
-final class RecordingStorageManager {
+final class RecordingStorageService {
   
-  static let shared = RecordingStorageManager()
+  static let shared = RecordingStorageService()
   
   private let fileManager = FileManager.default
   

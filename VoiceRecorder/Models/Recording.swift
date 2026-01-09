@@ -3,7 +3,7 @@
 //  VoiceRecorder
 //
 //  Created by Arlin Kim on 1/8/26.
-//
+//  녹음 데이터 모델 (id, url, duration 등)
 
 import Foundation
 

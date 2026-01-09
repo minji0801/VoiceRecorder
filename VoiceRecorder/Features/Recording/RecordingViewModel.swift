@@ -1,9 +1,9 @@
 //
-//  RecordingVM.swift
+//  RecordingViewModel.swift
 //  VoiceRecorder
 //
 //  Created by Arlin Kim on 1/8/26.
-//
+//  녹음 상태/로직 관리
 
 import Foundation
 import Combine

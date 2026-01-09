@@ -1,15 +1,15 @@
 //
-//  PlayerVC.swift
+//  PlayerViewController.swift
 //  VoiceRecorder
 //
 //  Created by Arlin Kim on 1/9/26.
-//
+//  재생 화면 UI (모달)
 
 import UIKit
 import SnapKit
 import Combine
 
-final class PlayerVC: UIViewController {
+final class PlayerViewController: UIViewController {
   
   // MARK: - Recording File Info
   
@@ -125,14 +125,14 @@ final class PlayerVC: UIViewController {
     return button
   }()
   
-  private let viewModel: PlayerVM
+  private let viewModel: PlayerViewModel
   private var cancellables = Set<AnyCancellable>()
   private var isSeeking = false
   
   // MARK: - Initialization
   
   init(recording: Recording) {
-    self.viewModel = PlayerVM(recording: recording)
+    self.viewModel = PlayerViewModel(recording: recording)
     super.init(nibName: nil, bundle: nil)
   }
   

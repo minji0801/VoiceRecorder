@@ -1,15 +1,15 @@
 //
-//  RecordingVC.swift
+//  RecordingViewController.swift
 //  VoiceRecorder
 //
 //  Created by Arlin Kim on 1/8/26.
-//
+//  녹음 화면 UI
 
 import UIKit
 import SnapKit
 import Combine
 
-final class RecordingVC: UIViewController {
+final class RecordingViewController: UIViewController {
   
   // MARK: - Properties
 
@@ -54,7 +54,7 @@ final class RecordingVC: UIViewController {
   
   private let iconConfig = UIImage.SymbolConfiguration(pointSize: 24, weight: .medium)
   
-  // MARK: - Lifesycle
+  // MARK: - Lifecycle
   
   override func viewDidLoad() {
     super.viewDidLoad()

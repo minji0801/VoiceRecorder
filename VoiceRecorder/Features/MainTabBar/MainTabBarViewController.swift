@@ -1,13 +1,13 @@
 //
-//  MainTabBarVC.swift
+//  MainTabBarViewController.swift
 //  VoiceRecorder
 //
 //  Created by 김민지 on 1/6/26.
-//
+//  탭바 컨트롤러 (녹음/목록 탭)
 
 import UIKit
 
-final class MainTabBarVC: UITabBarController {
+final class MainTabBarViewController: UITabBarController {
   
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -30,10 +30,10 @@ final class MainTabBarVC: UITabBarController {
   }
   
   private func setupVC() {
-    let recordingVC = RecordingVC()
+    let recordingVC = RecordingViewController()
     recordingVC.tabBarItem = UITabBarItem(title: "녹음", image: UIImage(systemName: "mic"), selectedImage: UIImage(systemName: "mic.fill"))
     
-    let listVC = ListVC()
+    let listVC = RecordingListViewController()
     listVC.tabBarItem = UITabBarItem(title: "목록", image: UIImage(systemName: "text.document"), selectedImage: UIImage(systemName: "text.document.fill"))
     
     viewControllers = [recordingVC, listVC]

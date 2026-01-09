@@ -3,7 +3,7 @@
 //  VoiceRecorder
 //
 //  Created by Arlin Kim on 1/9/26.
-//
+//  재생 기능 (AVAudioPlayer)
 
 import Foundation
 import AVFoundation

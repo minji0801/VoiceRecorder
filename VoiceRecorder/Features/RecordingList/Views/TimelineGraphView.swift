@@ -3,7 +3,7 @@
 //  VoiceRecorder
 //
 //  Created by Arlin Kim on 1/8/26.
-//
+//  타임라인 그래프 뷰
 
 import UIKit
 import SnapKit

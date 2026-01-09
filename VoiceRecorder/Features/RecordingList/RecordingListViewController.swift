@@ -1,15 +1,15 @@
 //
-//  ListVC.swift
+//  RecordingListViewController.swift
 //  VoiceRecorder
 //
 //  Created by Arlin Kim on 1/8/26.
-//
+//  녹음 목록 화면 UI
 
 import UIKit
 import Combine
 import SnapKit
 
-final class ListVC: UIViewController {
+final class RecordingListViewController: UIViewController {
   
   // MARK: - Properties
   
@@ -24,7 +24,7 @@ final class ListVC: UIViewController {
     return label
   }()
   
-  private let viewModel = ListVM()
+  private let viewModel = RecordingListViewModel()
   private var cancellables = Set<AnyCancellable>()
   
   override func viewDidLoad() {
@@ -82,11 +82,11 @@ final class ListVC: UIViewController {
 
 // MARK: - TimelineGraphViewDelegate
 
-extension ListVC: TimelineGraphViewDelegate {
+extension RecordingListViewController: TimelineGraphViewDelegate {
   
   func timelineGraphView(_ view: TimelineGraphView, didSelectRecordingAt index: Int) {
     guard let recording = view.getRecording(at: index) else { return }
-    let playerVC = PlayerVC(recording: recording)
+    let playerVC = PlayerViewController(recording: recording)
     if let sheet = playerVC.sheetPresentationController {
       sheet.detents = [.custom { _ in 400 }]
       sheet.prefersGrabberVisible = true

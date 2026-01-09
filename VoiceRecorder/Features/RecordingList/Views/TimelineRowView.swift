@@ -3,7 +3,7 @@
 //  VoiceRecorder
 //
 //  Created by Arlin Kim on 1/8/26.
-//
+//  녹음 항목 행 뷰
 
 import UIKit
 

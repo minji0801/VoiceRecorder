@@ -1,9 +1,9 @@
 //
-//  AudioRecordManager.swift
+//  AudioRecorderService.swift
 //  VoiceRecorder
 //
 //  Created by Arlin Kim on 1/8/26.
-//
+//  녹음 기능 (AVAudioRecorder)
 
 import UIKit
 import AVFoundation
@@ -22,6 +22,10 @@ final class AudioRecorderService: NSObject {
   @Published private(set) var isRecording: Bool = false
   @Published private(set) var audioLevel: Float = 0
   @Published private(set) var elapsedTime: TimeInterval = 0
+  
+  private override init() {
+    super.init()
+  }
   
   // 권한 요청
   func requestPermission(completion: @escaping (Bool) -> Void) {
