@@ -84,6 +84,11 @@ extension ListVC: TimelineGraphViewDelegate {
   
   func timelineGraphView(_ view: TimelineGraphView, didSelectRecordingAt index: Int) {
     guard let recording = view.getRecording(at: index) else { return }
-    // TODO: 재생하기
+    let playerVC = PlayerVC(recording: recording)
+    if let sheet = playerVC.sheetPresentationController {
+      sheet.detents = [.custom { _ in 400 }]
+      sheet.prefersGrabberVisible = true
+    }
+    present(playerVC, animated: true)
   }
 }
