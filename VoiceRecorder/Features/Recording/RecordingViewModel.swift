@@ -46,8 +46,8 @@ final class RecordingViewModel {
   
   // MARK: - Public Methods
   
-  func requestPermission(completion: @escaping (Bool) -> Void) {
-    recorderService.requestPermission(completion: completion)
+  func checkPermission(completion: @escaping (Bool) -> Void) {
+    recorderService.checkPermission(completion: completion)
   }
   
   func startRecording() throws {
