@@ -27,10 +27,23 @@ final class AudioRecorderService: NSObject {
     super.init()
   }
   
-  // 권한 요청
-  func requestPermission(completion: @escaping (Bool) -> Void) {
-    AVAudioApplication.requestRecordPermission { grated in
-      completion(grated)
+  // 권한 확인
+  func checkPermission(completion: @escaping (Bool) -> Void) {
+    let session =  AVAudioApplication.shared
+    
+    switch session.recordPermission {
+    case .granted:
+      completion(true)
+      
+    case .denied:
+      completion(false)
+      
+    case .undetermined:
+      AVAudioApplication.requestRecordPermission { grated in
+        completion(grated)
+      }
+    default:
+      completion(false)
     }
   }
   

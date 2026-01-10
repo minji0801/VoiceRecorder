@@ -12,6 +12,9 @@ import Combine
 final class RecordingViewController: UIViewController {
   
   // MARK: - Properties
+  
+  // 권한 거절 시 - 권한 요청 뷰
+  private let permissionView = PremissionRequstView()
 
   // 타임 라벨
   private let timerLabel: UILabel = {
@@ -26,8 +29,8 @@ final class RecordingViewController: UIViewController {
   private let waveformView = WaveformView()
   
   // 레코딩 버튼
-  private lazy var recordButton: UIButton = {
-    let button = UIButton(type: .system)
+  private lazy var recordButton: BounceButton = {
+    let button = BounceButton()
     button.backgroundColor = .customRed
     button.tintColor = .white
     button.layer.cornerRadius = 40
@@ -38,8 +41,8 @@ final class RecordingViewController: UIViewController {
   }()
   
   // 일시정지 버튼
-  private lazy var pauseButton: UIButton = {
-    let button = UIButton()
+  private lazy var pauseButton: BounceButton = {
+    let button = BounceButton()
     button.setImage(UIImage(systemName: "pause.fill", withConfiguration: iconConfig), for: .normal)
     button.tintColor = .white
     button.backgroundColor = .customPurple
@@ -61,7 +64,7 @@ final class RecordingViewController: UIViewController {
     setupUI()
     setupConstraints()
     setupBindings()
-    requestMicPermission()
+    checkMicPermission()
   }
   
   // MARK: - Setup
@@ -69,27 +72,39 @@ final class RecordingViewController: UIViewController {
   private func setupUI() {
     view.backgroundColor = .customBlack
     
+    view.addSubview(permissionView)
     view.addSubview(timerLabel)
     view.addSubview(waveformView)
     view.addSubview(recordButton)
     view.addSubview(pauseButton)
+    
+    permissionView.isHidden = true
   }
   
   private func setupConstraints() {
+    permissionView.snp.makeConstraints { make in
+      make.top.equalTo(view.safeAreaLayoutGuide).inset(20)
+      make.leading.trailing.equalToSuperview().inset(20)
+      make.height.equalTo(60)
+    }
+    
     waveformView.snp.makeConstraints { make in
       make.leading.trailing.equalToSuperview().inset(20)
       make.center.equalToSuperview()
       make.height.equalTo(120)
     }
+    
     timerLabel.snp.makeConstraints { make in
       make.bottom.equalTo(waveformView.snp.top).offset(-40)
       make.centerX.equalToSuperview()
     }
+    
     recordButton.snp.makeConstraints { make in
       make.top.equalTo(waveformView.snp.bottom).offset(40)
       make.centerX.equalToSuperview()
       make.size.equalTo(80)
     }
+    
     pauseButton.snp.makeConstraints { make in
       make.leading.equalTo(recordButton.snp.trailing).offset(40)
       make.centerY.equalTo(recordButton)
@@ -121,12 +136,12 @@ final class RecordingViewController: UIViewController {
       .store(in: &cancellables)
   }
   
-  private func requestMicPermission() {
-    viewModel.requestPermission { grated in
-      if !grated {
-        print("마이크 권한 거부됨")
-        // TODO: 권한 거부 시 UI/UX
-      }
+  private func checkMicPermission() {
+    viewModel.checkPermission { [weak self] grated in
+      self?.timerLabel.alpha = grated ? 1.0 : 0.5
+      self?.recordButton.isEnabled = grated
+      self?.recordButton.alpha = grated ? 1.0 : 0.5
+      self?.permissionView.isHidden = grated
     }
   }
   
@@ -155,27 +170,20 @@ final class RecordingViewController: UIViewController {
   // MARK: - Actions
   
   @objc private func recordButtonTapped() {
-    recordButton.animateBounce { [weak self] in
-      guard let self = self else { return }
-      
-      switch self.viewModel.state {
-        case .idle:
-          do {
-            try self.viewModel.startRecording()
-            self.waveformView.reset()
-          } catch {
-//            showAlert(title: "녹음 오류", message: error.localizedDescription)
-          }
-        case .recording, .paused:
-          self.viewModel.stopRecording()
+    switch viewModel.state {
+    case .idle:
+      do {
+        try viewModel.startRecording()
+        waveformView.reset()
+      } catch {
+        //            showAlert(title: "녹음 오류", message: error.localizedDescription)
       }
+    case .recording, .paused:
+      viewModel.stopRecording()
     }
   }
   
   @objc private func pauseButtonTapped() {
-    pauseButton.animateBounce { [weak self] in
-      guard let self = self else { return }
-      self.viewModel.togglePause()
-    }
+    viewModel.togglePause()
   }
 }
