@@ -23,6 +23,8 @@ final class AudioRecorderService: NSObject {
   @Published private(set) var audioLevel: Float = 0
   @Published private(set) var elapsedTime: TimeInterval = 0
   
+  var currentQuality: AudioQuality = .medium
+  
   private override init() {
     super.init()
   }
@@ -57,15 +59,8 @@ final class AudioRecorderService: NSObject {
       try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
       try session.setActive(true)
       
-      // TODO: 음성 품질 컨트롤하기
       let url = getFileURL()
-      let settings: [String: Any] = [
-        AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-        AVSampleRateKey: 44100,
-        AVNumberOfChannelsKey: 1,
-        AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue,
-        AVEncoderBitRateKey: 128000
-      ]
+      let settings = currentQuality.settings
       
       audioRecorder = try AVAudioRecorder(url: url, settings: settings)
       audioRecorder?.delegate = self
