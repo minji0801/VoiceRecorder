@@ -125,6 +125,9 @@ final class PlayerViewController: UIViewController {
     return button
   }()
   
+  // 에러 배너 뷰
+  private let errorBannerView = ErrorBannerView()
+
   private let viewModel: PlayerViewModel
   private var cancellables = Set<AnyCancellable>()
   private var isSeeking = false
@@ -173,12 +176,18 @@ final class PlayerViewController: UIViewController {
     view.addSubview(waveformView)
     view.addSubview(progressStackView)
     view.addSubview(controlsStackView)
-    
+    view.addSubview(errorBannerView)
+
     recordingNameLabel.text = viewModel.recordingName
     recordingDetailsLabel.text = viewModel.recordingDetails
   }
   
   private func setupConstraints() {
+    errorBannerView.snp.makeConstraints { make in
+      make.top.equalTo(view.safeAreaLayoutGuide).inset(20)
+      make.leading.trailing.equalToSuperview().inset(20)
+    }
+
     infoStackView.snp.makeConstraints { make in
       make.top.equalTo(view.safeAreaLayoutGuide).offset(40)
       make.leading.trailing.equalToSuperview().inset(20)
@@ -231,13 +240,22 @@ final class PlayerViewController: UIViewController {
     do {
       try viewModel.loadAudio()
       durationLabel.text = viewModel.formattedDuration
-      
+
       waveformView.loadSamples(from: viewModel.recording.url) { [weak self] samples in
         self?.viewModel.setWaveformSamples(samples)
       }
     } catch {
-      // TODO: 오류 처리
+      errorBannerView.show(error: error, autoDismiss: false)
+      disableControls()
     }
+  }
+
+  private func disableControls() {
+    playButton.isEnabled = false
+    playButton.alpha = 0.5
+    backwardButton.isEnabled = false
+    forwardButton.isEnabled = false
+    progressSlider.isEnabled = false
   }
   
   // MARK: - Update UI

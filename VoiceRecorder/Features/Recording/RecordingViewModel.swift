@@ -50,6 +50,10 @@ final class RecordingViewModel {
     recorderService.checkPermission(completion: completion)
   }
   
+  func setQuality(_ quality: AudioQuality) {
+    recorderService.currentQuality = quality
+  }
+  
   func startRecording() throws {
     try recorderService.startRecording()
     state = .recording

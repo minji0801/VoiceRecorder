@@ -23,6 +23,8 @@ final class AudioRecorderService: NSObject {
   @Published private(set) var audioLevel: Float = 0
   @Published private(set) var elapsedTime: TimeInterval = 0
   
+  var currentQuality: AudioQuality = .medium
+  
   private override init() {
     super.init()
   }
@@ -32,18 +34,18 @@ final class AudioRecorderService: NSObject {
     let session =  AVAudioApplication.shared
     
     switch session.recordPermission {
-    case .granted:
-      completion(true)
-      
-    case .denied:
-      completion(false)
-      
-    case .undetermined:
-      AVAudioApplication.requestRecordPermission { grated in
-        completion(grated)
-      }
-    default:
-      completion(false)
+      case .granted:
+        completion(true)
+        
+      case .denied:
+        completion(false)
+        
+      case .undetermined:
+        AVAudioApplication.requestRecordPermission { grated in
+          completion(grated)
+        }
+      default:
+        completion(false)
     }
   }
   
@@ -56,30 +58,30 @@ final class AudioRecorderService: NSObject {
     do {
       try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
       try session.setActive(true)
-      
-      // TODO: 음성 품질 컨트롤하기
-      let url = getFileURL()
-      let settings: [String: Any] = [
-        AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-        AVSampleRateKey: 44100,
-        AVNumberOfChannelsKey: 1,
-        AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue,
-        AVEncoderBitRateKey: 128000
-      ]
-      
-      audioRecorder = try AVAudioRecorder(url: url, settings: settings)
-      audioRecorder?.delegate = self
-      audioRecorder?.isMeteringEnabled = true
-      audioRecorder?.prepareToRecord()
-      
-      if audioRecorder?.record() == true {
-        isRecording = true
-        recordingStartTime = Date()
-        pausedDuration = 0
-        startMeteringTimer()
-      }
     } catch {
-      // TODO: 오류 처리
+      throw RecordingError.sessionSetupFailed
+    }
+    
+    let url = getFileURL()
+    let settings = currentQuality.settings
+    
+    do {
+      audioRecorder = try AVAudioRecorder(url: url, settings: settings)
+    } catch {
+      throw RecordingError.recorderInitFailed
+    }
+    
+    audioRecorder?.delegate = self
+    audioRecorder?.isMeteringEnabled = true
+    audioRecorder?.prepareToRecord()
+    
+    if audioRecorder?.record() == true {
+      isRecording = true
+      recordingStartTime = Date()
+      pausedDuration = 0
+      startMeteringTimer()
+    } else {
+      throw RecordingError.recordingFailed
     }
   }
   
@@ -92,6 +94,9 @@ final class AudioRecorderService: NSObject {
     isRecording = false
     elapsedTime = 0
     audioLevel = 0
+    
+    // 오디오 세션 비활성화 (배터리 절약)
+    try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
   }
   
   // 녹음 일시정지
