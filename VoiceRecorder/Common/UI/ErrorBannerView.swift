@@ -34,7 +34,11 @@ final class ErrorBannerView: UIView {
     super.init(coder: coder)
     setupUI()
   }
-  
+
+  deinit {
+    hideTimer?.invalidate()
+  }
+
   private func setupUI() {
     backgroundColor = .customNavy
     layer.cornerRadius = 12
