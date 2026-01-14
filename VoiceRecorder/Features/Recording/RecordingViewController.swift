@@ -12,9 +12,9 @@ import Combine
 final class RecordingViewController: UIViewController {
   
   // MARK: - Properties
-  
-  // 권한 거절 시 - 권한 요청 뷰
-  private let permissionView = PremissionRequstView()
+
+  // 에러 배너 뷰
+  private let errorBannerView = ErrorBannerView()
   
   // 타임 라벨
   private let timerLabel: UILabel = {
@@ -84,24 +84,21 @@ final class RecordingViewController: UIViewController {
   
   private func setupUI() {
     view.backgroundColor = .customBlack
-    
-    view.addSubview(permissionView)
+
     view.addSubview(timerLabel)
     view.addSubview(waveformView)
     view.addSubview(qualitySegment)
     view.addSubview(recordButton)
     view.addSubview(pauseButton)
-    
-    permissionView.isHidden = true
+    view.addSubview(errorBannerView)
   }
   
   private func setupConstraints() {
-    permissionView.snp.makeConstraints { make in
+    errorBannerView.snp.makeConstraints { make in
       make.top.equalTo(view.safeAreaLayoutGuide).inset(20)
       make.leading.trailing.equalToSuperview().inset(20)
-      make.height.equalTo(60)
     }
-    
+
     waveformView.snp.makeConstraints { make in
       make.leading.trailing.equalToSuperview().inset(20)
       make.centerX.equalToSuperview()
@@ -158,11 +155,15 @@ final class RecordingViewController: UIViewController {
   }
   
   private func checkMicPermission() {
-    viewModel.checkPermission { [weak self] grated in
-      self?.timerLabel.alpha = grated ? 1.0 : 0.5
-      self?.recordButton.isEnabled = grated
-      self?.recordButton.alpha = grated ? 1.0 : 0.5
-      self?.permissionView.isHidden = grated
+    viewModel.checkPermission { [weak self] granted in
+      guard let self = self else { return }
+      self.timerLabel.alpha = granted ? 1.0 : 0.5
+      self.recordButton.isEnabled = granted
+      self.recordButton.alpha = granted ? 1.0 : 0.5
+
+      if !granted {
+        self.errorBannerView.show(error: RecordingError.permissionDenied, autoDismiss: false)
+      }
     }
   }
   
@@ -202,7 +203,7 @@ final class RecordingViewController: UIViewController {
           try viewModel.startRecording()
           waveformView.reset()
         } catch {
-          //            showAlert(title: "녹음 오류", message: error.localizedDescription)
+          errorBannerView.show(error: error)
         }
       case .recording, .paused:
         viewModel.stopRecording()

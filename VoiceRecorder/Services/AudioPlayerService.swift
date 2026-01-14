@@ -39,11 +39,24 @@ final class AudioPlayerService: NSObject {
   func loadAudio(url: URL) throws {
     stop()
     
-    let session = AVAudioSession.sharedInstance()
-    try session.setCategory(.playback, mode: .default)
-    try session.setActive(true)
+    guard FileManager.default.fileExists(atPath: url.path) else {
+      throw PlaybackError.fileNotFound
+    }
     
-    audioPlayer = try AVAudioPlayer(contentsOf: url)
+    let session = AVAudioSession.sharedInstance()
+    do {
+      try session.setCategory(.playback, mode: .default)
+      try session.setActive(true)
+    } catch {
+      throw PlaybackError.playerInitFailed
+    }
+    
+    do {
+      audioPlayer = try AVAudioPlayer(contentsOf: url)
+    } catch {
+      throw PlaybackError.invalidFormat
+    }
+    
     audioPlayer?.delegate = self
     audioPlayer?.isMeteringEnabled = true
     audioPlayer?.prepareToPlay()

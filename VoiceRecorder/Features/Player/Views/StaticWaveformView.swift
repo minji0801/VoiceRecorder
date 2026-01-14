@@ -63,7 +63,8 @@ final class StaticWaveformView: BaseWaveformView {
 
     try file.read(into: buffer)
 
-    guard let floatChannelData = buffer.floatChannelData else {
+    guard let floatChannelData = buffer.floatChannelData,
+          format.channelCount > 0 else {
       return []
     }
 
